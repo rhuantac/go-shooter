@@ -48,7 +48,7 @@ func TestActions(t *testing.T) {
 		expectedY := 3.0
 		world, character := setupWorld()
 		playerName :=  "John"
-		action := Action{action: "UP", player: playerName}
+		action := Action{command: MoveUp, player: playerName}
 		playerStore := make(map[string] *box2d.B2Body)
 		playerStore[playerName] = character
 
@@ -61,9 +61,6 @@ func TestActions(t *testing.T) {
 		if !almostEqual(character.GetPosition().X, expectedX) {
 			t.Errorf("player '%s' moved horizontally while going up", playerName)
 		}
-
-		
-
 	})
 
 	t.Run("player goes LEFT", func(t *testing.T) {
@@ -71,7 +68,7 @@ func TestActions(t *testing.T) {
 		expectedY := 2.0
 		world, character := setupWorld()
 		playerName :=  "John"
-		action := Action{action: "LEFT", player: playerName}
+		action := Action{command: MoveLeft, player: playerName}
 		playerStore := make(map[string] *box2d.B2Body)
 		playerStore[playerName] = character
 
@@ -83,8 +80,7 @@ func TestActions(t *testing.T) {
 
 		if !almostEqual(character.GetPosition().Y, expectedY) {
 			t.Errorf("player '%s' moved vertically while going left", playerName)
-		}
-		
+		}		
 	})
 
 	t.Run("player goes DOWN", func(t *testing.T) {
@@ -92,7 +88,7 @@ func TestActions(t *testing.T) {
 		expectedY := 1.0
 		world, character := setupWorld()
 		playerName :=  "John"
-		action := Action{action: "DOWN", player: playerName}
+		action := Action{command: MoveDown, player: playerName}
 		playerStore := make(map[string] *box2d.B2Body)
 		playerStore[playerName] = character
 
@@ -112,7 +108,7 @@ func TestActions(t *testing.T) {
 		expectedY := 2.0
 		world, character := setupWorld()
 		playerName :=  "John"
-		action := Action{action: "RIGHT", player: playerName}
+		action := Action{command: MoveRight, player: playerName}
 		playerStore := make(map[string] *box2d.B2Body)
 		playerStore[playerName] = character
 
