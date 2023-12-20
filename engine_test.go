@@ -43,49 +43,87 @@ func setupWorld() (world box2d.B2World, character *box2d.B2Body) {
 }
 
 func TestActions(t *testing.T) {
-	t.Run("player goes up on action UP", func(t *testing.T) {
+	t.Run("player goes UP", func(t *testing.T) {
+		expectedX := 2.0
+		expectedY := 3.0
 		world, character := setupWorld()
 		playerName :=  "John"
 		action := Action{action: "UP", player: playerName}
 		playerStore := make(map[string] *box2d.B2Body)
 		playerStore[playerName] = character
-		//Acions to perform
-		err := ProcessWorld(&world, playerStore, action)
 
-		if err != nil {
-			t.Fatalf("Error processing world, '%v'", action)
+		ProcessWorld(&world, playerStore, action)
+
+		if !almostEqual(character.GetPosition().Y, expectedY) {
+			t.Errorf("player '%s' didn't go up correctly. Got %.1f expected %.1f", playerName, character.GetPosition().Y, expectedY)
 		}
 
-		if !almostEqual(character.GetPosition().X, 2.0) {
+		if !almostEqual(character.GetPosition().X, expectedX) {
 			t.Errorf("player '%s' moved horizontally while going up", playerName)
 		}
 
-		if !almostEqual(character.GetPosition().Y, 3.0) {
-			t.Errorf("player '%s' didn't go up correctly. Got %.1f expected %.1f", playerName, character.GetPosition().Y, 3.0)
-		}
+		
 
 	})
 
-	t.Run("player goes left on action LEFT", func(t *testing.T) {
+	t.Run("player goes LEFT", func(t *testing.T) {
+		expectedX := 1.0
+		expectedY := 2.0
 		world, character := setupWorld()
 		playerName :=  "John"
 		action := Action{action: "LEFT", player: playerName}
 		playerStore := make(map[string] *box2d.B2Body)
 		playerStore[playerName] = character
-		//Acions to perform
-		err := ProcessWorld(&world, playerStore, action)
 
-		if err != nil {
-			t.Fatalf("Error processing world, '%v'", action)
+		ProcessWorld(&world, playerStore, action)
+
+		if !almostEqual(character.GetPosition().X, expectedX) {
+			t.Errorf("player '%s' didn't go left correctly. Got %.1f expected %.1f", playerName, character.GetPosition().X, expectedX)
 		}
 
-		if !almostEqual(character.GetPosition().X, 1.0) {
-			t.Errorf("player '%s' didn't go left correctly. Got %.1f expected %.1f", playerName, character.GetPosition().X, 1.0)
-		}
-
-		if !almostEqual(character.GetPosition().Y, 2.0) {
+		if !almostEqual(character.GetPosition().Y, expectedY) {
 			t.Errorf("player '%s' moved vertically while going left", playerName)
 		}
 		
+	})
+
+	t.Run("player goes DOWN", func(t *testing.T) {
+		expectedX := 2.0
+		expectedY := 1.0
+		world, character := setupWorld()
+		playerName :=  "John"
+		action := Action{action: "DOWN", player: playerName}
+		playerStore := make(map[string] *box2d.B2Body)
+		playerStore[playerName] = character
+
+		ProcessWorld(&world, playerStore, action)
+
+		if !almostEqual(character.GetPosition().Y, expectedY) {
+			t.Errorf("player '%s' didn't go down correctly. Got %.1f expected %.1f", playerName, character.GetPosition().Y, expectedY)
+		}
+
+		if !almostEqual(character.GetPosition().X, expectedX) {
+			t.Errorf("player '%s' moved horizontally while going down", playerName)
+		}		
+	})
+
+	t.Run("player goes RIGHT", func(t *testing.T) {
+		expectedX := 3.0
+		expectedY := 2.0
+		world, character := setupWorld()
+		playerName :=  "John"
+		action := Action{action: "RIGHT", player: playerName}
+		playerStore := make(map[string] *box2d.B2Body)
+		playerStore[playerName] = character
+
+		ProcessWorld(&world, playerStore, action)
+
+		if !almostEqual(character.GetPosition().X, expectedX) {
+			t.Errorf("player '%s' didn't go right correctly. Got %.1f expected %.1f", playerName, character.GetPosition().X, expectedX)
+		}
+
+		if !almostEqual(character.GetPosition().Y, expectedY) {
+			t.Errorf("player '%s' moved horizontally while going down", playerName)
+		}		
 	})
 }
