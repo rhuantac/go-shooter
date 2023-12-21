@@ -3,18 +3,18 @@ package main
 import "github.com/ByteArena/box2d"
 
 
-type Command string
+type InputType string
 
 const (
-	MoveLeft Command = "LEFT"
-	MoveUp Command = "UP"
-	MoveRight Command = "RIGHT"
-	MoveDown Command = "DOWN"
+	MoveLeft InputType = "LEFT"
+	MoveUp InputType = "UP"
+	MoveRight InputType = "RIGHT"
+	MoveDown InputType = "DOWN"
 )
 
 const MoveSpeed = 10.0
 type Action struct {
-	command Command
+	input InputType
 	player string
 }
 
@@ -22,13 +22,13 @@ type Action struct {
 
 func ProcessWorld(world *box2d.B2World, playerStore map[string]*box2d.B2Body, action Action) error{
 	player := playerStore[action.player]
-	if action.command == MoveUp {
+	if action.input == MoveUp {
 		player.ApplyForceToCenter(box2d.B2Vec2{X: 0.0, Y: MoveSpeed}, true)
-	} else if action.command == MoveLeft {
+	} else if action.input == MoveLeft {
 		player.ApplyForceToCenter(box2d.B2Vec2{X: MoveSpeed * -1, Y: 0.0}, true)
-	} else if action.command == MoveDown {
+	} else if action.input == MoveDown {
 		player.ApplyForceToCenter(box2d.B2Vec2{X: 0.0, Y: MoveSpeed * -1}, true)
-	} else if action.command == MoveRight{
+	} else if action.input == MoveRight{
 		player.ApplyForceToCenter(box2d.B2Vec2{X: MoveSpeed, Y: 0.0}, true)
 	}
 	

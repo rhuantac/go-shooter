@@ -48,7 +48,7 @@ func TestActions(t *testing.T) {
 		expectedY := 3.0
 		world, character := setupWorld()
 		playerName :=  "John"
-		action := Action{command: MoveUp, player: playerName}
+		action := Action{input: MoveUp, player: playerName}
 		playerStore := make(map[string] *box2d.B2Body)
 		playerStore[playerName] = character
 
@@ -68,7 +68,7 @@ func TestActions(t *testing.T) {
 		expectedY := 2.0
 		world, character := setupWorld()
 		playerName :=  "John"
-		action := Action{command: MoveLeft, player: playerName}
+		action := Action{input: MoveLeft, player: playerName}
 		playerStore := make(map[string] *box2d.B2Body)
 		playerStore[playerName] = character
 
@@ -88,7 +88,7 @@ func TestActions(t *testing.T) {
 		expectedY := 1.0
 		world, character := setupWorld()
 		playerName :=  "John"
-		action := Action{command: MoveDown, player: playerName}
+		action := Action{input: MoveDown, player: playerName}
 		playerStore := make(map[string] *box2d.B2Body)
 		playerStore[playerName] = character
 
@@ -108,7 +108,7 @@ func TestActions(t *testing.T) {
 		expectedY := 2.0
 		world, character := setupWorld()
 		playerName :=  "John"
-		action := Action{command: MoveRight, player: playerName}
+		action := Action{input: MoveRight, player: playerName}
 		playerStore := make(map[string] *box2d.B2Body)
 		playerStore[playerName] = character
 
