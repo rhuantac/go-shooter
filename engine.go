@@ -1,6 +1,8 @@
 package main
 
-import "github.com/ByteArena/box2d"
+import (
+	"github.com/ByteArena/box2d"
+)
 
 
 type InputType string
@@ -37,8 +39,11 @@ func (e WorldProcessor) Process(playerStore map[string]*box2d.B2Body, action Act
 		player.ApplyForceToCenter(box2d.B2Vec2{X: moveSpeed, Y: 0.0}, true)
 	}
 	
-	for i := 0; i < 60; i++ {
-		e.World.Step(1.0 / 60.0, 6, 2)
+	tickRate := 60 //World iterations per second
+	tickDuration := 1.0 / float64(tickRate)
+	
+	for i := 0; i < tickRate; i++ {
+		e.World.Step(tickDuration, 6, 2)
 	}
 	return nil
 }
