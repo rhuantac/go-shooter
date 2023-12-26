@@ -7,7 +7,7 @@ import (
 	"github.com/ByteArena/box2d"
 )
 
-func almostEqual(a, b float64) bool{
+func almostEqual(a, b float64) bool {
 	var tolerance float64 = 0.1
 	if a == b {
 		return true
@@ -16,9 +16,31 @@ func almostEqual(a, b float64) bool{
 	d := math.Abs(a - b)
 
 	if b == 0 {
-        return d < tolerance
-    }
-    return (d / math.Abs(b)) < tolerance
+		return d < tolerance
+	}
+	return (d / math.Abs(b)) < tolerance
+}
+
+type ActionQueue struct {
+	actions []Action
+}
+
+func (aq *ActionQueue) Push(action Action) {
+	aq.actions = append(aq.actions, action)
+}
+
+func (aq *ActionQueue) PopAll() []Action {
+	actionsBuffer := make([]Action, len(aq.actions))
+	copy(actionsBuffer, aq.actions)
+	aq.actions = aq.actions[:0]
+	return actionsBuffer
+}
+
+func queueProcess(worldProcessor WorldProcessor, playerStore map[string]*box2d.B2Body, actionQueue ActionQueue, playerName string) {
+	for i := 0; i < 60; i++ {
+		actions := actionQueue.PopAll()
+		worldProcessor.Process(playerStore, actions)
+	}
 }
 
 func TestActions(t *testing.T) {
@@ -27,12 +49,14 @@ func TestActions(t *testing.T) {
 		expectedY := 3.0
 		worldProcessor := NewProcessor()
 		character := worldProcessor.CreateCharacter()
-		playerName :=  "John"
-		action := Action{input: MoveUp, player: playerName}
-		playerStore := make(map[string] *box2d.B2Body)
+		playerName := "John"
+		playerStore := make(map[string]*box2d.B2Body)
 		playerStore[playerName] = character
 
-		worldProcessor.Process(playerStore, action)
+		actionQueue := ActionQueue{actions: make([]Action, 0)}
+		actionQueue.Push(Action{input: MoveUp, player: playerName})
+
+		queueProcess(worldProcessor, playerStore, actionQueue, playerName)
 
 		if !almostEqual(character.GetPosition().Y, expectedY) {
 			t.Errorf("player '%s' didn't go up correctly. Got %.1f expected %.1f", playerName, character.GetPosition().Y, expectedY)
@@ -48,12 +72,14 @@ func TestActions(t *testing.T) {
 		expectedY := 2.0
 		worldProcessor := NewProcessor()
 		character := worldProcessor.CreateCharacter()
-		playerName :=  "John"
-		action := Action{input: MoveLeft, player: playerName}
-		playerStore := make(map[string] *box2d.B2Body)
+		playerName := "John"
+		playerStore := make(map[string]*box2d.B2Body)
 		playerStore[playerName] = character
 
-		worldProcessor.Process(playerStore, action)
+		actionQueue := ActionQueue{actions: make([]Action, 0)}
+		actionQueue.Push(Action{input: MoveLeft, player: playerName})
+
+		queueProcess(worldProcessor, playerStore, actionQueue, playerName)
 
 		if !almostEqual(character.GetPosition().X, expectedX) {
 			t.Errorf("player '%s' didn't go left correctly. Got %.1f expected %.1f", playerName, character.GetPosition().X, expectedX)
@@ -61,7 +87,7 @@ func TestActions(t *testing.T) {
 
 		if !almostEqual(character.GetPosition().Y, expectedY) {
 			t.Errorf("player '%s' moved vertically while going left", playerName)
-		}		
+		}
 	})
 
 	t.Run("player goes DOWN", func(t *testing.T) {
@@ -69,20 +95,21 @@ func TestActions(t *testing.T) {
 		expectedY := 1.0
 		worldProcessor := NewProcessor()
 		character := worldProcessor.CreateCharacter()
-		playerName :=  "John"
-		action := Action{input: MoveDown, player: playerName}
-		playerStore := make(map[string] *box2d.B2Body)
+		playerName := "John"
+		playerStore := make(map[string]*box2d.B2Body)
 		playerStore[playerName] = character
 
-		worldProcessor.Process(playerStore, action)
+		actionQueue := ActionQueue{actions: make([]Action, 0)}
+		actionQueue.Push(Action{input: MoveDown, player: playerName})
 
+		queueProcess(worldProcessor, playerStore, actionQueue, playerName)
 		if !almostEqual(character.GetPosition().Y, expectedY) {
 			t.Errorf("player '%s' didn't go down correctly. Got %.1f expected %.1f", playerName, character.GetPosition().Y, expectedY)
 		}
 
 		if !almostEqual(character.GetPosition().X, expectedX) {
 			t.Errorf("player '%s' moved horizontally while going down", playerName)
-		}		
+		}
 	})
 
 	t.Run("player goes RIGHT", func(t *testing.T) {
@@ -90,12 +117,14 @@ func TestActions(t *testing.T) {
 		expectedY := 2.0
 		worldProcessor := NewProcessor()
 		character := worldProcessor.CreateCharacter()
-		playerName :=  "John"
-		action := Action{input: MoveRight, player: playerName}
-		playerStore := make(map[string] *box2d.B2Body)
+		playerName := "John"
+		playerStore := make(map[string]*box2d.B2Body)
 		playerStore[playerName] = character
 
-		worldProcessor.Process(playerStore, action)
+		actionQueue := ActionQueue{actions: make([]Action, 0)}
+		actionQueue.Push(Action{input: MoveRight, player: playerName})
+
+		queueProcess(worldProcessor, playerStore, actionQueue, playerName)
 
 		if !almostEqual(character.GetPosition().X, expectedX) {
 			t.Errorf("player '%s' didn't go right correctly. Got %.1f expected %.1f", playerName, character.GetPosition().X, expectedX)
@@ -103,6 +132,6 @@ func TestActions(t *testing.T) {
 
 		if !almostEqual(character.GetPosition().Y, expectedY) {
 			t.Errorf("player '%s' moved horizontally while going down", playerName)
-		}		
+		}
 	})
 }
