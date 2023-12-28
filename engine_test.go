@@ -21,21 +21,6 @@ func almostEqual(a, b float64) bool {
 	return (d / math.Abs(b)) < tolerance
 }
 
-type ActionQueue struct {
-	actions []Action
-}
-
-func (aq *ActionQueue) Push(action Action) {
-	aq.actions = append(aq.actions, action)
-}
-
-func (aq *ActionQueue) PopAll() []Action {
-	actionsBuffer := make([]Action, len(aq.actions))
-	copy(actionsBuffer, aq.actions)
-	aq.actions = aq.actions[:0]
-	return actionsBuffer
-}
-
 func queueProcess(worldProcessor WorldProcessor, playerStore map[string]*box2d.B2Body, actionQueue ActionQueue, playerName string) {
 	for i := 0; i < 60; i++ {
 		actions := actionQueue.PopAll()

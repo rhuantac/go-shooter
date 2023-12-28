@@ -20,7 +20,7 @@ type Action struct {
 	player string
 }
 type Processor interface {
-	Process(playerStore map[string]*box2d.B2Body, action Action) error
+	Process(playerStore map[string]*box2d.B2Body, actions []Action) error
 	CreateCharacter() *box2d.B2Body
 }
 type WorldProcessor struct {
