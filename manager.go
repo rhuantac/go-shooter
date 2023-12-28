@@ -15,6 +15,8 @@ type GameManager struct {
 func CreateNewGame(processor Processor) GameManager {
 	store := make(PlayerStore, 0)
 	store["John"] = processor.CreateCharacter()
+	quitChan := make(chan struct{})
+	go gameLoop(processor, store, quitChan, endGame)
 	return GameManager{gameProcessor: processor, playerStore: store}
 }
 
@@ -32,4 +34,8 @@ func gameLoop(processor Processor, players PlayerStore, quit chan struct{}, endG
 			return
 		}
 	}
+}
+
+func endGame() {
+	println("End game called")
 }

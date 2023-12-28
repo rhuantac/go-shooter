@@ -28,7 +28,7 @@ func queueProcess(worldProcessor WorldProcessor, playerStore map[string]*box2d.B
 	}
 }
 
-func TestActions(t *testing.T) {
+func TestBasicActions(t *testing.T) {
 	t.Run("player goes UP", func(t *testing.T) {
 		expectedX := 2.0
 		expectedY := 3.0
