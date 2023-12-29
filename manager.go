@@ -9,6 +9,7 @@ import (
 type PlayerStore map[string]*box2d.B2Body
 type GameManager struct {
 	gameProcessor Processor
+	actionQueue *ActionQueue
 	playerStore   PlayerStore
 }
 
@@ -16,23 +17,29 @@ func CreateNewGame(processor Processor) GameManager {
 	store := make(PlayerStore, 0)
 	store["John"] = processor.CreateCharacter()
 	quitChan := make(chan struct{})
-	go gameLoop(processor, store, quitChan, endGame)
-	return GameManager{gameProcessor: processor, playerStore: store}
+	gameActionQueue := &ActionQueue{}
+	go gameLoop(processor, store, gameActionQueue, quitChan, endGame)
+	return GameManager{gameProcessor: processor, playerStore: store, actionQueue: gameActionQueue}
 }
 
-func gameLoop(processor Processor, players PlayerStore, quit chan struct{}, endGameFunc func()) {
+func gameLoop(processor Processor, players PlayerStore, actionQueue *ActionQueue, quit chan struct{}, endGameFunc func()) {
 	ticker := time.NewTicker(1 * time.Second)
 	for {
 		select {
 		case <-ticker.C:
-			for i := 0; i < 60; i++ {
-				processor.Process(players, nil)
-			}
+			queueProcess(processor, players, actionQueue)
 		case <-quit:
 			ticker.Stop()
 			endGameFunc()
 			return
 		}
+	}
+}
+
+func queueProcess(worldProcessor Processor, playerStore map[string]*box2d.B2Body, actionQueue *ActionQueue) {
+	for i := 0; i < 60; i++ {
+		actions := actionQueue.PopAll()
+		worldProcessor.Process(playerStore, actions)
 	}
 }
 

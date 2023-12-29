@@ -27,7 +27,7 @@ type WorldProcessor struct {
 	World *box2d.B2World
 }
 
-func (e WorldProcessor) Process(playerStore map[string]*box2d.B2Body, actions []Action) error {
+func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, actions []Action) error {
 	for _, action := range actions {
 		player := playerStore[action.player]
 		if action.input == MoveUp {
@@ -49,7 +49,7 @@ func (e WorldProcessor) Process(playerStore map[string]*box2d.B2Body, actions []
 	return nil
 }
 
-func (e WorldProcessor) CreateCharacter() *box2d.B2Body {
+func (e *WorldProcessor) CreateCharacter() *box2d.B2Body {
 	bd := box2d.MakeB2BodyDef()
 	bd.Position.Set(2.0, 2.0)
 	bd.Type = box2d.B2BodyType.B2_dynamicBody

@@ -34,14 +34,7 @@ func TestGameManager(t *testing.T) {
 	t.Run("world is processed 60 ticks per call", func(t *testing.T) {
 		processor := stubWorldProcessor{}
 		playerStore := make(PlayerStore)
-		quitChan := make(chan struct{})
-		endGameChan := make(chan struct{})
-		stubEndGame := func() {
-			close(endGameChan)
-		}
-		go gameLoop(&processor, playerStore, quitChan, stubEndGame)
-		time.Sleep(1 * time.Second)
-		close(quitChan)
+		queueProcess(&processor, playerStore, &ActionQueue{})
 		if processor.processCalls != 60 {
 			t.Errorf("got %d calls on gameLoop want at least %d", processor.processCalls, 60)
 		}
@@ -52,10 +45,11 @@ func TestGameManager(t *testing.T) {
 		playerStore := make(PlayerStore)
 		quitChan := make(chan struct{})
 		endGameChan := make(chan struct{})
+		actionQueue := &ActionQueue{actions: []Action{Action{input: MoveDown, player: "John"}}}
 		stubEndGame := func() {
 			close(endGameChan)
 		}
-		go gameLoop(&processor, playerStore, quitChan, stubEndGame)
+		go gameLoop(&processor, playerStore, actionQueue, quitChan, stubEndGame)
 		close(quitChan)
 
 		select {

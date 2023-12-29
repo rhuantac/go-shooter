@@ -21,13 +21,12 @@ func almostEqual(a, b float64) bool {
 	return (d / math.Abs(b)) < tolerance
 }
 
-func queueProcess(worldProcessor WorldProcessor, playerStore map[string]*box2d.B2Body, actionQueue ActionQueue, playerName string) {
+func mockQueueProcess(worldProcessor WorldProcessor, playerStore map[string]*box2d.B2Body, actionQueue ActionQueue, playerName string) {
 	for i := 0; i < 60; i++ {
 		actions := actionQueue.PopAll()
 		worldProcessor.Process(playerStore, actions)
 	}
 }
-
 func TestBasicActions(t *testing.T) {
 	t.Run("player goes UP", func(t *testing.T) {
 		expectedX := 2.0
@@ -41,7 +40,7 @@ func TestBasicActions(t *testing.T) {
 		actionQueue := ActionQueue{actions: make([]Action, 0)}
 		actionQueue.Push(Action{input: MoveUp, player: playerName})
 
-		queueProcess(worldProcessor, playerStore, actionQueue, playerName)
+		mockQueueProcess(worldProcessor, playerStore, actionQueue, playerName)
 
 		if !almostEqual(character.GetPosition().Y, expectedY) {
 			t.Errorf("player '%s' didn't go up correctly. Got %.1f expected %.1f", playerName, character.GetPosition().Y, expectedY)
@@ -64,7 +63,7 @@ func TestBasicActions(t *testing.T) {
 		actionQueue := ActionQueue{actions: make([]Action, 0)}
 		actionQueue.Push(Action{input: MoveLeft, player: playerName})
 
-		queueProcess(worldProcessor, playerStore, actionQueue, playerName)
+		mockQueueProcess(worldProcessor, playerStore, actionQueue, playerName)
 
 		if !almostEqual(character.GetPosition().X, expectedX) {
 			t.Errorf("player '%s' didn't go left correctly. Got %.1f expected %.1f", playerName, character.GetPosition().X, expectedX)
@@ -87,7 +86,7 @@ func TestBasicActions(t *testing.T) {
 		actionQueue := ActionQueue{actions: make([]Action, 0)}
 		actionQueue.Push(Action{input: MoveDown, player: playerName})
 
-		queueProcess(worldProcessor, playerStore, actionQueue, playerName)
+		mockQueueProcess(worldProcessor, playerStore, actionQueue, playerName)
 		if !almostEqual(character.GetPosition().Y, expectedY) {
 			t.Errorf("player '%s' didn't go down correctly. Got %.1f expected %.1f", playerName, character.GetPosition().Y, expectedY)
 		}
@@ -109,7 +108,7 @@ func TestBasicActions(t *testing.T) {
 		actionQueue := ActionQueue{actions: make([]Action, 0)}
 		actionQueue.Push(Action{input: MoveRight, player: playerName})
 
-		queueProcess(worldProcessor, playerStore, actionQueue, playerName)
+		mockQueueProcess(worldProcessor, playerStore, actionQueue, playerName)
 
 		if !almostEqual(character.GetPosition().X, expectedX) {
 			t.Errorf("player '%s' didn't go right correctly. Got %.1f expected %.1f", playerName, character.GetPosition().X, expectedX)
