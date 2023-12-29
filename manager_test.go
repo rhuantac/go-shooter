@@ -45,7 +45,7 @@ func TestGameManager(t *testing.T) {
 		playerStore := make(PlayerStore)
 		quitChan := make(chan struct{})
 		endGameChan := make(chan struct{})
-		actionQueue := &ActionQueue{actions: []Action{Action{input: MoveDown, player: "John"}}}
+		actionQueue := &ActionQueue{actions: []Action{{input: MoveDown, player: "John"}}}
 		stubEndGame := func() {
 			close(endGameChan)
 		}
