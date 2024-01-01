@@ -7,6 +7,12 @@ import (
 )
 
 type Snapshot struct {
+	state []State
+}
+
+type State struct {
+	posX, posY float64
+	name       string
 }
 type PlayerStore map[string]*box2d.B2Body
 type GameManager struct {
@@ -43,10 +49,11 @@ func queueProcess(worldProcessor Processor, playerStore map[string]*box2d.B2Body
 	for i := 0; i < 60; i++ {
 		actions := actionQueue.PopAll()
 		worldProcessor.Process(playerStore, actions)
-		snapshotQueue.Push(Snapshot{})
-	}
-}
+		snapshot := Snapshot{state: []State{}}
+		for id, p := range playerStore {
+			snapshot.state = append(snapshot.state, State{name: id, posX: p.GetPosition().X, posY: p.GetPosition().Y})
+		}
+		snapshotQueue.Push(snapshot)
 
-func endGame() {
-	println("End game called")
+	}
 }
