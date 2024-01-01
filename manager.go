@@ -20,7 +20,7 @@ func CreateNewGame(processor Processor) GameManager {
 	store := make(PlayerStore, 0)
 	store["John"] = processor.CreateCharacter()
 	quitChan := make(chan struct{})
-	gameActionQueue := &ActionQueue{}
+	gameActionQueue := NewActionQueue()
 	snapshotQueue := &SnapshotQueue{}
 	go gameLoop(processor, store, gameActionQueue, snapshotQueue, quitChan)
 	return GameManager{gameProcessor: processor, playerStore: store, actionQueue: gameActionQueue, snapshotQueue: snapshotQueue}

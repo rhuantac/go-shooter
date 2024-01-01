@@ -33,7 +33,7 @@ func TestGameManager(t *testing.T) {
 	t.Run("world is processed 60 ticks per call", func(t *testing.T) {
 		processor := stubWorldProcessor{}
 		playerStore := make(PlayerStore)
-		queueProcess(&processor, playerStore, &ActionQueue{}, &SnapshotQueue{})
+		queueProcess(&processor, playerStore, NewActionQueue(), &SnapshotQueue{})
 		if processor.processCalls != 60 {
 			t.Errorf("got %d calls on gameLoop want at least %d", processor.processCalls, 60)
 		}
@@ -43,7 +43,7 @@ func TestGameManager(t *testing.T) {
 		processor := stubWorldProcessor{}
 		playerStore := make(PlayerStore)
 		snapshotQueue :=  SnapshotQueue{}
-		queueProcess(&processor, playerStore, &ActionQueue{}, &snapshotQueue)
+		queueProcess(&processor, playerStore, NewActionQueue(), &snapshotQueue)
 		if len(snapshotQueue.snapshots) != 60 {
 			t.Errorf("got %d snapshots want %d", len(snapshotQueue.snapshots), 60)
 		}
