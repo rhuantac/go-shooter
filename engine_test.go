@@ -21,7 +21,7 @@ func almostEqual(a, b float64) bool {
 	return (d / math.Abs(b)) < tolerance
 }
 
-func mockQueueProcess(worldProcessor WorldProcessor, playerStore map[string]*box2d.B2Body, actionQueue *ActionQueue, playerName string) {
+func mockQueueProcess(worldProcessor WorldProcessor, playerStore map[string]*box2d.B2Body, actionQueue *Queue[Action], playerName string) {
 	for i := 0; i < 60; i++ {
 		actions := actionQueue.PopAll()
 		worldProcessor.Process(playerStore, actions)
@@ -37,7 +37,7 @@ func TestBasicActions(t *testing.T) {
 		playerStore := make(map[string]*box2d.B2Body)
 		playerStore[playerName] = character
 
-		actionQueue := NewActionQueue()
+		actionQueue := NewQueue[Action]()
 		actionQueue.Push(Action{input: MoveUp, player: playerName})
 
 		mockQueueProcess(worldProcessor, playerStore, actionQueue, playerName)
@@ -60,9 +60,9 @@ func TestBasicActions(t *testing.T) {
 		playerStore := make(map[string]*box2d.B2Body)
 		playerStore[playerName] = character
 
-		actionQueue := NewActionQueue()
+		actionQueue := NewQueue[Action]()
 		actionQueue.Push(Action{input: MoveLeft, player: playerName})
-
+		
 		mockQueueProcess(worldProcessor, playerStore, actionQueue, playerName)
 
 		if !almostEqual(character.GetPosition().X, expectedX) {
@@ -83,7 +83,7 @@ func TestBasicActions(t *testing.T) {
 		playerStore := make(map[string]*box2d.B2Body)
 		playerStore[playerName] = character
 
-		actionQueue := NewActionQueue()
+		actionQueue := NewQueue[Action]()
 		actionQueue.Push(Action{input: MoveDown, player: playerName})
 
 		mockQueueProcess(worldProcessor, playerStore, actionQueue, playerName)
@@ -105,7 +105,7 @@ func TestBasicActions(t *testing.T) {
 		playerStore := make(map[string]*box2d.B2Body)
 		playerStore[playerName] = character
 
-		actionQueue := NewActionQueue()
+		actionQueue := NewQueue[Action]()
 		actionQueue.Push(Action{input: MoveRight, player: playerName})
 
 		mockQueueProcess(worldProcessor, playerStore, actionQueue, playerName)

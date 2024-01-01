@@ -2,46 +2,31 @@ package main
 
 import "sync"
 
-type ActionQueue struct {
-	actions []Action
+type Queue[T any] struct {
+	values []T
 	mutex *sync.Mutex
 }
 
-func (aq *ActionQueue) Size () int{
-	aq.mutex.Lock()
-	defer aq.mutex.Unlock()
-	return len(aq.actions)
+func (q *Queue[T]) Size () int{
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+	return len(q.values)
 }
-func (aq *ActionQueue) Push(action Action) {
-	aq.mutex.Lock()
-	aq.actions = append(aq.actions, action)
-	aq.mutex.Unlock()
-}
-
-func (aq *ActionQueue) PopAll() []Action {
-	aq.mutex.Lock()
-	actionsBuffer := make([]Action, len(aq.actions))
-	copy(actionsBuffer, aq.actions)
-	aq.actions = aq.actions[:0]
-	aq.mutex.Unlock()
-	return actionsBuffer
+func (q *Queue[T]) Push(value T) {
+	q.mutex.Lock()
+	q.values = append(q.values, value)
+	q.mutex.Unlock()
 }
 
-type SnapshotQueue struct {
-	snapshots []Snapshot
+func (q *Queue[T]) PopAll() []T {
+	q.mutex.Lock()
+	queueBuffer := make([]T, len(q.values))
+	copy(queueBuffer, q.values)
+	q.values = q.values[:0]
+	q.mutex.Unlock()
+	return queueBuffer
 }
 
-func (q *SnapshotQueue) Push(snapshot Snapshot) {
-	q.snapshots = append(q.snapshots, snapshot)
-}
-
-func (q *SnapshotQueue) PopAll() []Snapshot {
-	snapshotBuffer := make([]Snapshot, len(q.snapshots))
-	copy(snapshotBuffer, q.snapshots)
-	q.snapshots = q.snapshots[:0]
-	return snapshotBuffer
-}
-
-func NewActionQueue() *ActionQueue{
-	return &ActionQueue{actions: []Action{}, mutex: &sync.Mutex{}}
+func NewQueue[T any]() *Queue[T]{
+	return &Queue[T]{values: []T{}, mutex: &sync.Mutex{}}
 }

@@ -17,22 +17,26 @@ type State struct {
 type PlayerStore map[string]*box2d.B2Body
 type GameManager struct {
 	gameProcessor Processor
-	actionQueue   *ActionQueue
-	snapshotQueue *SnapshotQueue
+	actionQueue   *Queue[Action]
+	snapshotQueue *Queue[Snapshot]
 	playerStore   PlayerStore
+}
+
+func (gm *GameManager) Start() chan struct{}{
+	quitChan := make(chan struct{})
+	go gameLoop(gm.gameProcessor, gm.playerStore, gm.actionQueue, gm.snapshotQueue, quitChan)
+	return quitChan
 }
 
 func CreateNewGame(processor Processor) GameManager {
 	store := make(PlayerStore, 0)
 	store["John"] = processor.CreateCharacter()
-	quitChan := make(chan struct{})
-	gameActionQueue := NewActionQueue()
-	snapshotQueue := &SnapshotQueue{}
-	go gameLoop(processor, store, gameActionQueue, snapshotQueue, quitChan)
+	gameActionQueue := NewQueue[Action]()
+	snapshotQueue := NewQueue[Snapshot]()
 	return GameManager{gameProcessor: processor, playerStore: store, actionQueue: gameActionQueue, snapshotQueue: snapshotQueue}
 }
 
-func gameLoop(processor Processor, players PlayerStore, actionQueue *ActionQueue, snapshotQueue *SnapshotQueue, quit chan struct{}) {
+func gameLoop(processor Processor, players PlayerStore, actionQueue *Queue[Action], snapshotQueue *Queue[Snapshot], quit chan struct{}) {
 	ticker := time.NewTicker(1 * time.Second)
 	for {
 		select {
@@ -45,7 +49,7 @@ func gameLoop(processor Processor, players PlayerStore, actionQueue *ActionQueue
 	}
 }
 
-func queueProcess(worldProcessor Processor, playerStore map[string]*box2d.B2Body, actionQueue *ActionQueue, snapshotQueue *SnapshotQueue) {
+func queueProcess(worldProcessor Processor, playerStore map[string]*box2d.B2Body, actionQueue *Queue[Action], snapshotQueue *Queue[Snapshot]) {
 	for i := 0; i < 60; i++ {
 		actions := actionQueue.PopAll()
 		worldProcessor.Process(playerStore, actions)
