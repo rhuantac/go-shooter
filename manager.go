@@ -6,10 +6,12 @@ import (
 	"github.com/ByteArena/box2d"
 )
 
+type Snapshot struct {
+}
 type PlayerStore map[string]*box2d.B2Body
 type GameManager struct {
 	gameProcessor Processor
-	actionQueue *ActionQueue
+	actionQueue   *ActionQueue
 	playerStore   PlayerStore
 }
 
@@ -27,7 +29,7 @@ func gameLoop(processor Processor, players PlayerStore, actionQueue *ActionQueue
 	for {
 		select {
 		case <-ticker.C:
-			queueProcess(processor, players, actionQueue)
+			queueProcess(processor, players, actionQueue, &SnapshotQueue{})
 		case <-quit:
 			ticker.Stop()
 			endGameFunc()
@@ -36,10 +38,11 @@ func gameLoop(processor Processor, players PlayerStore, actionQueue *ActionQueue
 	}
 }
 
-func queueProcess(worldProcessor Processor, playerStore map[string]*box2d.B2Body, actionQueue *ActionQueue) {
+func queueProcess(worldProcessor Processor, playerStore map[string]*box2d.B2Body, actionQueue *ActionQueue, snapshotQueue *SnapshotQueue) {
 	for i := 0; i < 60; i++ {
 		actions := actionQueue.PopAll()
 		worldProcessor.Process(playerStore, actions)
+		snapshotQueue.Push(Snapshot{})
 	}
 }
 
