@@ -12,6 +12,7 @@ type PlayerStore map[string]*box2d.B2Body
 type GameManager struct {
 	gameProcessor Processor
 	actionQueue   *ActionQueue
+	snapshotQueue *SnapshotQueue
 	playerStore   PlayerStore
 }
 
@@ -20,19 +21,19 @@ func CreateNewGame(processor Processor) GameManager {
 	store["John"] = processor.CreateCharacter()
 	quitChan := make(chan struct{})
 	gameActionQueue := &ActionQueue{}
-	go gameLoop(processor, store, gameActionQueue, quitChan, endGame)
-	return GameManager{gameProcessor: processor, playerStore: store, actionQueue: gameActionQueue}
+	snapshotQueue := &SnapshotQueue{}
+	go gameLoop(processor, store, gameActionQueue, snapshotQueue, quitChan)
+	return GameManager{gameProcessor: processor, playerStore: store, actionQueue: gameActionQueue, snapshotQueue: snapshotQueue}
 }
 
-func gameLoop(processor Processor, players PlayerStore, actionQueue *ActionQueue, quit chan struct{}, endGameFunc func()) {
+func gameLoop(processor Processor, players PlayerStore, actionQueue *ActionQueue, snapshotQueue *SnapshotQueue, quit chan struct{}) {
 	ticker := time.NewTicker(1 * time.Second)
 	for {
 		select {
 		case <-ticker.C:
-			queueProcess(processor, players, actionQueue, &SnapshotQueue{})
+			queueProcess(processor, players, actionQueue, snapshotQueue)
 		case <-quit:
 			ticker.Stop()
-			endGameFunc()
 			return
 		}
 	}

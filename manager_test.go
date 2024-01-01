@@ -2,7 +2,6 @@ package main
 
 import (
 	"testing"
-	"time"
 
 	"github.com/ByteArena/box2d"
 )
@@ -39,27 +38,7 @@ func TestGameManager(t *testing.T) {
 			t.Errorf("got %d calls on gameLoop want at least %d", processor.processCalls, 60)
 		}
 	})
-
-	t.Run("game loop stops after quit message", func(t *testing.T) {
-		processor := stubWorldProcessor{}
-		playerStore := make(PlayerStore)
-		quitChan := make(chan struct{})
-		endGameChan := make(chan struct{})
-		actionQueue := &ActionQueue{actions: []Action{{input: MoveDown, player: "John"}}}
-		stubEndGame := func() {
-			close(endGameChan)
-		}
-		go gameLoop(&processor, playerStore, actionQueue, quitChan, stubEndGame)
-		close(quitChan)
-
-		select {
-		case <-endGameChan:
-			return
-		case <-time.After(1 * time.Second):
-			t.Errorf("stubEndGame wasn't called in time")
-		}
-	})
-
+	
 	t.Run("snapshots are taken on queue process", func(t *testing.T) {
 		processor := stubWorldProcessor{}
 		playerStore := make(PlayerStore)
