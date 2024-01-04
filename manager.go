@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"time"
 
 	"github.com/ByteArena/box2d"
@@ -22,18 +23,18 @@ type GameManager struct {
 	playerStore   PlayerStore
 }
 
-func (gm *GameManager) Start() chan struct{}{
+func (gm *GameManager) Start() chan struct{} {
 	quitChan := make(chan struct{})
 	go gameLoop(gm.gameProcessor, gm.playerStore, gm.actionQueue, gm.snapshotQueue, quitChan)
 	return quitChan
 }
 
-
 func (gm *GameManager) PerformAction(a Action) {
+	log.Printf("Apertou a tecla %s", a.input)
 	gm.actionQueue.Push(a)
 }
 
-func (gm *GameManager) GetSnapshots() []Snapshot{
+func (gm *GameManager) GetSnapshots() []Snapshot {
 	return gm.snapshotQueue.PopAll()
 }
 
@@ -47,27 +48,39 @@ func CreateNewGame(processor Processor) GameManager {
 }
 
 func gameLoop(processor Processor, players PlayerStore, actionQueue *Queue[Action], snapshotQueue *Queue[Snapshot], quit chan struct{}) {
-	ticker := time.NewTicker(1 * time.Second)
 	for {
 		select {
-		case <-ticker.C:
-			queueProcess(processor, players, actionQueue, snapshotQueue)
 		case <-quit:
-			ticker.Stop()
 			return
+		default:
+			queueProcess(processor, players, actionQueue, snapshotQueue)
 		}
+
 	}
 }
 
 func queueProcess(worldProcessor Processor, playerStore map[string]*box2d.B2Body, actionQueue *Queue[Action], snapshotQueue *Queue[Snapshot]) {
-	for i := 0; i < 60; i++ {
-		actions := actionQueue.PopAll()
-		worldProcessor.Process(playerStore, actions)
-		snapshot := Snapshot{state: []State{}}
-		for id, p := range playerStore {
-			snapshot.state = append(snapshot.state, State{name: id, posX: p.GetPosition().X, posY: p.GetPosition().Y})
+	dt := int64(16) // 1/60 in ms
+	currentTime := time.Now().UnixMilli()
+	accumulator := int64(0)
+	for {
+		newTime := time.Now().UnixMilli()
+		iterationTime := newTime - currentTime
+		
+		currentTime = newTime
+
+		accumulator += iterationTime
+
+		for accumulator >= dt {
+			actions := actionQueue.PopAll()
+			worldProcessor.Process(playerStore, actions)
+			snapshot := Snapshot{state: []State{}}
+			for id, p := range playerStore {
+				snapshot.state = append(snapshot.state, State{name: id, posX: p.GetPosition().X, posY: p.GetPosition().Y})
+			}
+			snapshotQueue.Push(snapshot)
+			accumulator -= dt
 		}
-		snapshotQueue.Push(snapshot)
 
 	}
 }

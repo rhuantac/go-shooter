@@ -13,7 +13,7 @@ const (
 	MoveDown  InputType = "DOWN"
 )
 
-const moveSpeed = 10.0
+const moveSpeed = 100.0
 
 type Action struct {
 	input  InputType
@@ -31,13 +31,13 @@ func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, actions [
 	for _, action := range actions {
 		player := playerStore[action.player]
 		if action.input == MoveUp {
-			player.ApplyForceToCenter(box2d.B2Vec2{X: 0.0, Y: moveSpeed}, true)
+			player.SetLinearVelocity(box2d.B2Vec2{X: 0.0, Y: moveSpeed})
 		} else if action.input == MoveLeft {
-			player.ApplyForceToCenter(box2d.B2Vec2{X: moveSpeed * -1, Y: 0.0}, true)
+			player.SetLinearVelocity(box2d.B2Vec2{X: moveSpeed * -1, Y: 0.0})
 		} else if action.input == MoveDown {
-			player.ApplyForceToCenter(box2d.B2Vec2{X: 0.0, Y: moveSpeed * -1}, true)
+			player.SetLinearVelocity(box2d.B2Vec2{X: 0.0, Y: moveSpeed * -1})
 		} else if action.input == MoveRight {
-			player.ApplyForceToCenter(box2d.B2Vec2{X: moveSpeed, Y: 0.0}, true)
+			player.SetLinearVelocity(box2d.B2Vec2{X: moveSpeed, Y: 0.0})
 		}
 	}
 

@@ -20,9 +20,9 @@ type Player struct {
 }
 
 func (p *Player) AddSnapshot(s State) {
-	if len(p.states) >= 60 {
-		// keep only the last 10 snaps
-		p.states = append(p.states[:60], s)
+	if len(p.states) >= 2 {
+		// keep only the last 2 snaps
+		p.states = append(p.states[:2], s)
 		return
 	}
 
