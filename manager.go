@@ -28,9 +28,19 @@ func (gm *GameManager) Start() chan struct{}{
 	return quitChan
 }
 
+
+func (gm *GameManager) PerformAction(a Action) {
+	gm.actionQueue.Push(a)
+}
+
+func (gm *GameManager) GetSnapshots() []Snapshot{
+	return gm.snapshotQueue.PopAll()
+}
+
 func CreateNewGame(processor Processor) GameManager {
 	store := make(PlayerStore, 0)
-	store["John"] = processor.CreateCharacter()
+	p := processor.CreateCharacter()
+	store["John"] = p
 	gameActionQueue := NewQueue[Action]()
 	snapshotQueue := NewQueue[Snapshot]()
 	return GameManager{gameProcessor: processor, playerStore: store, actionQueue: gameActionQueue, snapshotQueue: snapshotQueue}
