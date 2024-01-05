@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"log"
@@ -8,13 +8,14 @@ import (
 )
 
 type Snapshot struct {
-	state []State
+	Objects []State
 }
 
 type State struct {
-	posX, posY float64
-	name       string
+	PosX, PosY float64
+	Name       string
 }
+
 type PlayerStore map[string]*box2d.B2Body
 type GameManager struct {
 	gameProcessor Processor
@@ -30,7 +31,7 @@ func (gm *GameManager) Start() chan struct{} {
 }
 
 func (gm *GameManager) PerformAction(a Action) {
-	log.Printf("Apertou a tecla %s", a.input)
+	log.Printf("Apertou a tecla %s", a.Input)
 	gm.actionQueue.Push(a)
 }
 
@@ -74,9 +75,9 @@ func queueProcess(worldProcessor Processor, playerStore map[string]*box2d.B2Body
 		for accumulator >= dt {
 			actions := actionQueue.PopAll()
 			worldProcessor.Process(playerStore, actions)
-			snapshot := Snapshot{state: []State{}}
+			snapshot := Snapshot{Objects: []State{}}
 			for id, p := range playerStore {
-				snapshot.state = append(snapshot.state, State{name: id, posX: p.GetPosition().X, posY: p.GetPosition().Y})
+				snapshot.Objects = append(snapshot.Objects, State{Name: id, PosX: p.GetPosition().X, PosY: p.GetPosition().Y})
 			}
 			snapshotQueue.Push(snapshot)
 			accumulator -= dt

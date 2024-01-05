@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"math"
@@ -38,7 +38,7 @@ func TestBasicActions(t *testing.T) {
 		playerStore[playerName] = character
 
 		actionQueue := NewQueue[Action]()
-		actionQueue.Push(Action{input: MoveUp, player: playerName})
+		actionQueue.Push(Action{Input: MoveUp, Player: playerName})
 
 		mockQueueProcess(worldProcessor, playerStore, actionQueue, playerName)
 
@@ -61,7 +61,7 @@ func TestBasicActions(t *testing.T) {
 		playerStore[playerName] = character
 
 		actionQueue := NewQueue[Action]()
-		actionQueue.Push(Action{input: MoveLeft, player: playerName})
+		actionQueue.Push(Action{Input: MoveLeft, Player: playerName})
 		
 		mockQueueProcess(worldProcessor, playerStore, actionQueue, playerName)
 
@@ -84,7 +84,7 @@ func TestBasicActions(t *testing.T) {
 		playerStore[playerName] = character
 
 		actionQueue := NewQueue[Action]()
-		actionQueue.Push(Action{input: MoveDown, player: playerName})
+		actionQueue.Push(Action{Input: MoveDown, Player: playerName})
 
 		mockQueueProcess(worldProcessor, playerStore, actionQueue, playerName)
 		if !almostEqual(character.GetPosition().Y, expectedY) {
@@ -106,7 +106,7 @@ func TestBasicActions(t *testing.T) {
 		playerStore[playerName] = character
 
 		actionQueue := NewQueue[Action]()
-		actionQueue.Push(Action{input: MoveRight, player: playerName})
+		actionQueue.Push(Action{Input: MoveRight, Player: playerName})
 
 		mockQueueProcess(worldProcessor, playerStore, actionQueue, playerName)
 

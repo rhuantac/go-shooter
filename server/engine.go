@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"github.com/ByteArena/box2d"
@@ -16,8 +16,8 @@ const (
 const moveSpeed = 100.0
 
 type Action struct {
-	input  InputType
-	player string
+	Input  InputType
+	Player string
 }
 type Processor interface {
 	Process(playerStore map[string]*box2d.B2Body, actions []Action) error
@@ -29,14 +29,14 @@ type WorldProcessor struct {
 
 func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, actions []Action) error {
 	for _, action := range actions {
-		player := playerStore[action.player]
-		if action.input == MoveUp {
+		player := playerStore[action.Player]
+		if action.Input == MoveUp {
 			player.SetLinearVelocity(box2d.B2Vec2{X: 0.0, Y: moveSpeed})
-		} else if action.input == MoveLeft {
+		} else if action.Input == MoveLeft {
 			player.SetLinearVelocity(box2d.B2Vec2{X: moveSpeed * -1, Y: 0.0})
-		} else if action.input == MoveDown {
+		} else if action.Input == MoveDown {
 			player.SetLinearVelocity(box2d.B2Vec2{X: 0.0, Y: moveSpeed * -1})
-		} else if action.input == MoveRight {
+		} else if action.Input == MoveRight {
 			player.SetLinearVelocity(box2d.B2Vec2{X: moveSpeed, Y: 0.0})
 		}
 	}

@@ -5,6 +5,8 @@ import (
 	"image/color"
 	"log"
 
+	"github.com/rhuantac/go-shooter/server"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
@@ -16,10 +18,10 @@ var (
 
 type Player struct {
 	X, Y   float32
-	states []State
+	states []server.State
 }
 
-func (p *Player) AddSnapshot(s State) {
+func (p *Player) AddSnapshot(s server.State) {
 	if len(p.states) >= 2 {
 		// keep only the last 2 snaps
 		p.states = append(p.states[:2], s)
@@ -29,9 +31,9 @@ func (p *Player) AddSnapshot(s State) {
 	p.states = append(p.states, s)
 }
 
-func (p *Player) RemoveSnapshot() (State, error) {
+func (p *Player) RemoveSnapshot() (server.State, error) {
 	if len(p.states) == 0 {
-		return State{}, errors.New("array is empty")
+		return server.State{}, errors.New("array is empty")
 	}
 	s := p.states[0]
 	p.states = p.states[1:]
@@ -43,23 +45,23 @@ func (p *Player) NextState() {
 	if err != nil {
 		return
 	}
-	p.X = float32(next.posX)
-	p.Y = float32(-1 * next.posY) //Server coordinates are cartesian
+	p.X = float32(next.PosX)
+	p.Y = float32(-1 * next.PosY) //Server coordinates are cartesian
 }
 
 type Game struct {
-	manager *GameManager
+	manager *server.GameManager
 	players map[string]*Player
 }
 
 func (g *Game) Update() error {
 	snaps := g.manager.GetSnapshots()
 	for _, snap := range snaps {
-		for _, state := range snap.state {
-			if _, exists := g.players[state.name]; !exists {
-				g.players[state.name] = &Player{X: 0, Y: 0, states: make([]State, 0)}
+		for _, state := range snap.Objects {
+			if _, exists := g.players[state.Name]; !exists {
+				g.players[state.Name] = &Player{X: 0, Y: 0, states: make([]server.State, 0)}
 			}
-			g.players[state.name].AddSnapshot(state)
+			g.players[state.Name].AddSnapshot(state)
 		}
 	}
 
@@ -82,25 +84,25 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 func (g *Game) handleMovement() {
 	if ebiten.IsKeyPressed(ebiten.KeyD) || ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
-		g.manager.PerformAction(Action{input: MoveRight, player: "John"})
+		g.manager.PerformAction(server.Action{Input: server.MoveRight, Player: "John"})
 	}
 
 	if ebiten.IsKeyPressed(ebiten.KeyS) || ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		g.manager.PerformAction(Action{input: MoveDown, player: "John"})
+		g.manager.PerformAction(server.Action{Input: server.MoveDown, Player: "John"})
 	}
 
 	if ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-		g.manager.PerformAction(Action{input: MoveLeft, player: "John"})
+		g.manager.PerformAction(server.Action{Input: server.MoveLeft, Player: "John"})
 	}
 
 	if ebiten.IsKeyPressed(ebiten.KeyW) || ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		g.manager.PerformAction(Action{input: MoveUp, player: "John"})
+		g.manager.PerformAction(server.Action{Input: server.MoveUp, Player: "John"})
 	}
 }
 
 func main() {
-	processor := NewProcessor()
-	manager := CreateNewGame(&processor)
+	processor := server.NewProcessor()
+	manager := server.CreateNewGame(&processor)
 	g := &Game{manager: &manager, players: make(map[string]*Player)}
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Goshooter Demo")

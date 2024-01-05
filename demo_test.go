@@ -1,6 +1,10 @@
 package main
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/rhuantac/go-shooter/server"
+)
 
 func TestDemo(t *testing.T) {
 	t.Run("snapshot consume works", func(t *testing.T) {
@@ -14,9 +18,9 @@ func TestDemo(t *testing.T) {
 		}
 
 		for _, test := range cases {
-			p := &Player{X: 0, Y: 0, states: make([]State, 0)}
+			p := &Player{X: 0, Y: 0, states: make([]server.State, 0)}
 			for i := 0; i < test.size; i++ {
-				p.AddSnapshot(State{posX: 1, posY: 1, name: "John"})
+				p.AddSnapshot(server.State{PosX: 1, PosY: 1, Name: "John"})
 			}
 
 			p.RemoveSnapshot()

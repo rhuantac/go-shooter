@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ func TestQueues(t *testing.T) {
 	t.Run("action queue", func(t *testing.T) {
 		queue := NewQueue[Action]()
 		for i := 0; i < 3; i ++ {
-			queue.Push(Action{input: MoveDown, player: "John"})
+			queue.Push(Action{Input: MoveDown, Player: "John"})
 		}
 
 		if queue.Size() != 3 {
@@ -25,7 +25,7 @@ func TestQueues(t *testing.T) {
 		//test concurrency
 		go func(){
 			for i := 0; i < 10; i++ {
-				queue.Push(Action{input: MoveDown, player: "John"})
+				queue.Push(Action{Input: MoveDown, Player: "John"})
 			}
 		}()
 		go func(){
