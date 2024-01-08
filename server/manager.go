@@ -1,7 +1,6 @@
 package server
 
 import (
-	"log"
 	"time"
 
 	"github.com/ByteArena/box2d"
@@ -31,7 +30,6 @@ func (gm *GameManager) Start() chan struct{} {
 }
 
 func (gm *GameManager) PerformAction(a Action) {
-	log.Printf("Apertou a tecla %s", a.Input)
 	gm.actionQueue.Push(a)
 }
 

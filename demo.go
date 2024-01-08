@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	screenWidth  = 480
-	screenHeight = 480
+	screenWidth  = 1000
+	screenHeight = 600
 )
 
 type Player struct {
@@ -49,9 +49,26 @@ func (p *Player) NextState() {
 	p.Y = float32(-1 * next.PosY) //Server coordinates are cartesian
 }
 
+type KeyController struct {
+	keyMap map[server.InputType]bool
+}
+
+func (k *KeyController) keyPress(key server.InputType) {
+	k.keyMap[key] = true
+}
+
+func (k *KeyController) keyRelease(key server.InputType) {
+	k.keyMap[key] = false
+}
+
+func (k *KeyController) wasPressing(key server.InputType) bool {
+	return k.keyMap[key]
+}
+
 type Game struct {
 	manager *server.GameManager
 	players map[string]*Player
+	keys    KeyController
 }
 
 func (g *Game) Update() error {
@@ -83,27 +100,56 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func (g *Game) handleMovement() {
+
+	//Move right
 	if ebiten.IsKeyPressed(ebiten.KeyD) || ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
-		g.manager.PerformAction(server.Action{Input: server.MoveRight, Player: "John"})
+		if !g.keys.wasPressing(server.MoveRight) {
+			g.keys.keyPress(server.MoveRight)
+			g.manager.PerformAction(server.Action{Input: server.MoveRight, Player: "John"})
+		}
+	} else if g.keys.wasPressing(server.MoveRight) {
+		g.keys.keyRelease(server.MoveRight)
+		g.manager.PerformAction(server.Action{Input: server.StopMoveRight, Player: "John"})
 	}
 
+	//Move down
 	if ebiten.IsKeyPressed(ebiten.KeyS) || ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		g.manager.PerformAction(server.Action{Input: server.MoveDown, Player: "John"})
+		if !g.keys.wasPressing(server.MoveDown) {
+			g.keys.keyPress(server.MoveDown)
+			g.manager.PerformAction(server.Action{Input: server.MoveDown, Player: "John"})
+		}
+	} else if g.keys.wasPressing(server.MoveDown) {
+		g.keys.keyRelease(server.MoveDown)
+		g.manager.PerformAction(server.Action{Input: server.StopMoveDown, Player: "John"})
 	}
 
+	//Move left
 	if ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-		g.manager.PerformAction(server.Action{Input: server.MoveLeft, Player: "John"})
+		if !g.keys.wasPressing(server.MoveLeft) {
+			g.keys.keyPress(server.MoveLeft)
+			g.manager.PerformAction(server.Action{Input: server.MoveLeft, Player: "John"})
+		}
+	} else if g.keys.wasPressing(server.MoveLeft) {
+		g.keys.keyRelease(server.MoveLeft)
+		g.manager.PerformAction(server.Action{Input: server.StopMoveLeft, Player: "John"})
 	}
-
+	
+	//Move up
 	if ebiten.IsKeyPressed(ebiten.KeyW) || ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		g.manager.PerformAction(server.Action{Input: server.MoveUp, Player: "John"})
+		if !g.keys.wasPressing(server.MoveUp) {
+			g.keys.keyPress(server.MoveUp)
+			g.manager.PerformAction(server.Action{Input: server.MoveUp, Player: "John"})
+		}
+	} else if g.keys.wasPressing(server.MoveUp) {
+		g.keys.keyRelease(server.MoveUp)
+		g.manager.PerformAction(server.Action{Input: server.StopMoveUp, Player: "John"})
 	}
 }
 
 func main() {
 	processor := server.NewProcessor()
 	manager := server.CreateNewGame(&processor)
-	g := &Game{manager: &manager, players: make(map[string]*Player)}
+	g := &Game{manager: &manager, players: make(map[string]*Player), keys: KeyController{keyMap: make(map[server.InputType]bool)}}
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Goshooter Demo")
 	quitChan := manager.Start()

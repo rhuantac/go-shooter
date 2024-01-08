@@ -8,9 +8,13 @@ type InputType string
 
 const (
 	MoveLeft  InputType = "LEFT"
+	StopMoveLeft InputType = "STOP_LEFT"
 	MoveUp    InputType = "UP"
+	StopMoveUp InputType = "STOP_UP"
 	MoveRight InputType = "RIGHT"
+	StopMoveRight InputType = "STOP_RIGHT"
 	MoveDown  InputType = "DOWN"
+	StopMoveDown InputType = "STOP_DOWN"
 )
 
 const moveSpeed = 100.0
@@ -30,15 +34,7 @@ type WorldProcessor struct {
 func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, actions []Action) error {
 	for _, action := range actions {
 		player := playerStore[action.Player]
-		if action.Input == MoveUp {
-			player.SetLinearVelocity(box2d.B2Vec2{X: 0.0, Y: moveSpeed})
-		} else if action.Input == MoveLeft {
-			player.SetLinearVelocity(box2d.B2Vec2{X: moveSpeed * -1, Y: 0.0})
-		} else if action.Input == MoveDown {
-			player.SetLinearVelocity(box2d.B2Vec2{X: 0.0, Y: moveSpeed * -1})
-		} else if action.Input == MoveRight {
-			player.SetLinearVelocity(box2d.B2Vec2{X: moveSpeed, Y: 0.0})
-		}
+		movePlayer(action.Input, player)
 	}
 
 	tickRate := 60 //World iterations per second
@@ -71,7 +67,28 @@ func setupWorld() box2d.B2World {
 	return box2d.MakeB2World(gravity)
 }
 
+func movePlayer(input InputType, player *box2d.B2Body) {
+	velocity := player.GetLinearVelocity()
+
+	switch input {
+	case MoveUp:
+		player.SetLinearVelocity(box2d.B2Vec2{X: velocity.X, Y: moveSpeed})	
+	case MoveLeft:
+		player.SetLinearVelocity(box2d.B2Vec2{X: moveSpeed * -1, Y: velocity.Y})	
+	case MoveDown:
+		player.SetLinearVelocity(box2d.B2Vec2{X: velocity.X, Y: moveSpeed * -1})
+	case MoveRight:
+		player.SetLinearVelocity(box2d.B2Vec2{X: moveSpeed, Y: velocity.Y})
+	case StopMoveRight, StopMoveLeft:
+		player.SetLinearVelocity(box2d.B2Vec2{X: 0.0, Y: velocity.Y})
+	case StopMoveUp, StopMoveDown:
+		player.SetLinearVelocity(box2d.B2Vec2{X: velocity.X, Y: 0})
+	
+	}
+}
+
 func NewProcessor() WorldProcessor {
 	world := setupWorld()
 	return WorldProcessor{World: &world}
 }
+
