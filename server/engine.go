@@ -1,6 +1,8 @@
 package server
 
 import (
+	"fmt"
+
 	"github.com/ByteArena/box2d"
 )
 
@@ -33,7 +35,11 @@ type WorldProcessor struct {
 
 func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, actions []Action) error {
 	for _, action := range actions {
+		fmt.Printf("action %v", action)
 		player := playerStore[action.Player]
+		if player == nil {
+			return fmt.Errorf("player %s not found", action.Player)
+		}
 		movePlayer(action.Input, player)
 	}
 
@@ -53,8 +59,8 @@ func (e *WorldProcessor) CreateCharacter() *box2d.B2Body {
 	bd.AllowSleep = false
 
 	character := e.World.CreateBody(&bd)
-	shape := box2d.MakeB2PolygonShape()
-	shape.SetAsBox(0.20, 0.20)
+	shape := box2d.MakeB2CircleShape()
+	shape.SetRadius(20)
 	fd := box2d.MakeB2FixtureDef()
 	fd.Shape = &shape
 	fd.Density = 1.0

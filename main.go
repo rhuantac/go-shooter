@@ -43,7 +43,7 @@ func runWs(writePump chan server.Snapshot, gameManager *server.GameManager) erro
 	go socketManager.Start()
 
 	s := &http.Server{
-		Handler:      network.GameServer{Manager: &socketManager, GameManager: gameManager},
+		Handler:      network.GameServer{SocketManager: &socketManager, GameManager: gameManager},
 		ReadTimeout:  time.Second * 10,
 		WriteTimeout: time.Second * 10,
 	}
@@ -71,8 +71,8 @@ func runGame(writePump chan<- server.Snapshot) *server.GameManager {
 	processor := server.NewProcessor()
 	manager := server.CreateNewGame(&processor)
 	manager.Start()
-	
-	go func(){
+
+	go func() {
 		for {
 			snaps := manager.GetSnapshots()
 			if len(snaps) > 0 {
@@ -81,7 +81,7 @@ func runGame(writePump chan<- server.Snapshot) *server.GameManager {
 				}
 			}
 		}
-	
+
 	}()
 	return &manager
 }

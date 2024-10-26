@@ -2,6 +2,7 @@ package network
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
@@ -12,8 +13,8 @@ import (
 )
 
 type GameServer struct {
-	Manager     *SocketManager
-	GameManager *server.GameManager
+	SocketManager *SocketManager
+	GameManager   *server.GameManager
 }
 
 func (gs GameServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -23,38 +24,31 @@ func (gs GameServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer c.CloseNow()
-	gs.Manager.addConnection(c)
 	for {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*210)
 		defer cancel()
-		var v server.Action
-		err = wsjson.Read(ctx, c, &v)
+		var sAction SocketAction
+		err = wsjson.Read(ctx, c, &sAction)
 		if err != nil {
 			log.Printf("failed to read JSON %v: %v", r.RemoteAddr, err)
 			return
 		}
-		log.Printf("received: %v", v)
-		gs.GameManager.PerformAction(v)
+		log.Printf("received: %v %b", sAction.Type, sAction.Action)
 
-	}
-}
+		switch sAction.Type {
+		case Init:
+			var action InitAction
+			json.Unmarshal(sAction.Action, &action)
+			gs.SocketManager.InitPlayer(action, c)
+			gs.GameManager.InitPlayer(action.Id, action.Name)
+		case Movement:
+			var action server.Action
+			json.Unmarshal(sAction.Action, &action)
+			gs.GameManager.PerformAction(action)
+		default:
+			log.Printf("Unknown action received: %v", sAction.Type)
 
-type SocketManager struct {
-	WritePump   chan server.Snapshot
-	connections []*websocket.Conn
-}
-
-func (sm *SocketManager) addConnection(c *websocket.Conn) {
-	sm.connections = append(sm.connections, c)
-}
-
-func (sm *SocketManager) Start() {
-	for {
-		content := <-sm.WritePump
-		for _, conn := range sm.connections {
-			//log.Printf("Enviando content: %v para a conn: %v", content, conn)
-			ctx := context.Background()
-			wsjson.Write(ctx, conn, content)
 		}
+
 	}
 }
