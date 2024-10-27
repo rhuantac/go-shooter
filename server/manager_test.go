@@ -22,9 +22,10 @@ func (w *stubWorldProcessor) CreateCharacter() *box2d.B2Body {
 }
 
 func TestGameManager(t *testing.T) {
-	t.Run("one character is created on new game", func(t *testing.T) {
+	t.Run("init player adds player to store", func(t *testing.T) {
 		processor := stubWorldProcessor{}
-		CreateNewGame(&processor)
+		manager := CreateNewGame(&processor)
+		manager.InitPlayer("1", "player1")
 		if processor.createCharacterCalls != 1 {
 			t.Errorf("got %d calls on CreateCharacter want %d", processor.createCharacterCalls, 1)
 		}
@@ -38,11 +39,11 @@ func TestGameManager(t *testing.T) {
 			t.Errorf("got %d calls on gameLoop want at least %d", processor.processCalls, 60)
 		}
 	})
-	
+
 	t.Run("snapshots are taken on queue process", func(t *testing.T) {
 		processor := stubWorldProcessor{}
 		playerStore := make(PlayerStore)
-		snapshotQueue :=  NewQueue[Snapshot]()
+		snapshotQueue := NewQueue[Snapshot]()
 		queueProcess(&processor, playerStore, NewQueue[Action](), snapshotQueue)
 		if snapshotQueue.Size() != 60 {
 			t.Errorf("got %d snapshots want %d", snapshotQueue.Size(), 60)

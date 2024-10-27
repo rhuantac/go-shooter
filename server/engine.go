@@ -1,23 +1,25 @@
 package server
 
 import (
+	"fmt"
+
 	"github.com/ByteArena/box2d"
 )
 
 type InputType string
 
 const (
-	MoveLeft  InputType = "LEFT"
-	StopMoveLeft InputType = "STOP_LEFT"
-	MoveUp    InputType = "UP"
-	StopMoveUp InputType = "STOP_UP"
-	MoveRight InputType = "RIGHT"
+	MoveLeft      InputType = "LEFT"
+	StopMoveLeft  InputType = "STOP_LEFT"
+	MoveUp        InputType = "UP"
+	StopMoveUp    InputType = "STOP_UP"
+	MoveRight     InputType = "RIGHT"
 	StopMoveRight InputType = "STOP_RIGHT"
-	MoveDown  InputType = "DOWN"
-	StopMoveDown InputType = "STOP_DOWN"
+	MoveDown      InputType = "DOWN"
+	StopMoveDown  InputType = "STOP_DOWN"
 )
 
-const moveSpeed = 100.0
+const moveSpeed = 50.0
 
 type Action struct {
 	Input  InputType
@@ -33,7 +35,11 @@ type WorldProcessor struct {
 
 func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, actions []Action) error {
 	for _, action := range actions {
+		fmt.Printf("action %v", action)
 		player := playerStore[action.Player]
+		if player == nil {
+			return fmt.Errorf("player %s not found", action.Player)
+		}
 		movePlayer(action.Input, player)
 	}
 
@@ -53,8 +59,8 @@ func (e *WorldProcessor) CreateCharacter() *box2d.B2Body {
 	bd.AllowSleep = false
 
 	character := e.World.CreateBody(&bd)
-	shape := box2d.MakeB2PolygonShape()
-	shape.SetAsBox(0.20, 0.20)
+	shape := box2d.MakeB2CircleShape()
+	shape.SetRadius(20)
 	fd := box2d.MakeB2FixtureDef()
 	fd.Shape = &shape
 	fd.Density = 1.0
@@ -72,18 +78,29 @@ func movePlayer(input InputType, player *box2d.B2Body) {
 
 	switch input {
 	case MoveUp:
-		player.SetLinearVelocity(box2d.B2Vec2{X: velocity.X, Y: moveSpeed})	
-	case MoveLeft:
-		player.SetLinearVelocity(box2d.B2Vec2{X: moveSpeed * -1, Y: velocity.Y})	
-	case MoveDown:
 		player.SetLinearVelocity(box2d.B2Vec2{X: velocity.X, Y: moveSpeed * -1})
+	case MoveLeft:
+		player.SetLinearVelocity(box2d.B2Vec2{X: moveSpeed * -1, Y: velocity.Y})
+	case MoveDown:
+		player.SetLinearVelocity(box2d.B2Vec2{X: velocity.X, Y: moveSpeed})
 	case MoveRight:
 		player.SetLinearVelocity(box2d.B2Vec2{X: moveSpeed, Y: velocity.Y})
-	case StopMoveRight, StopMoveLeft:
-		player.SetLinearVelocity(box2d.B2Vec2{X: 0.0, Y: velocity.Y})
-	case StopMoveUp, StopMoveDown:
-		player.SetLinearVelocity(box2d.B2Vec2{X: velocity.X, Y: 0})
-	
+	case StopMoveRight:
+		if velocity.X > 0 { // Only stop right movement
+			player.SetLinearVelocity(box2d.B2Vec2{X: 0, Y: velocity.Y})
+		}
+	case StopMoveLeft:
+		if velocity.X < 0 { // Only stop left movement
+			player.SetLinearVelocity(box2d.B2Vec2{X: 0, Y: velocity.Y})
+		}
+	case StopMoveUp:
+		if velocity.Y < 0 { // Only stop up movement
+			player.SetLinearVelocity(box2d.B2Vec2{X: velocity.X, Y: 0})
+		}
+	case StopMoveDown:
+		if velocity.Y > 0 { // Only stop down movement
+			player.SetLinearVelocity(box2d.B2Vec2{X: velocity.X, Y: 0})
+		}
 	}
 }
 
@@ -91,4 +108,3 @@ func NewProcessor() WorldProcessor {
 	world := setupWorld()
 	return WorldProcessor{World: &world}
 }
-

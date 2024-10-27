@@ -30,7 +30,7 @@ func mockQueueProcess(worldProcessor WorldProcessor, playerStore map[string]*box
 func TestBasicActions(t *testing.T) {
 	t.Run("player goes UP", func(t *testing.T) {
 		expectedX := 2.0
-		expectedY := 3.0
+		expectedY := -48.0
 		worldProcessor := NewProcessor()
 		character := worldProcessor.CreateCharacter()
 		playerName := "John"
@@ -52,7 +52,7 @@ func TestBasicActions(t *testing.T) {
 	})
 
 	t.Run("player goes LEFT", func(t *testing.T) {
-		expectedX := 1.0
+		expectedX := -48.0
 		expectedY := 2.0
 		worldProcessor := NewProcessor()
 		character := worldProcessor.CreateCharacter()
@@ -62,7 +62,7 @@ func TestBasicActions(t *testing.T) {
 
 		actionQueue := NewQueue[Action]()
 		actionQueue.Push(Action{Input: MoveLeft, Player: playerName})
-		
+
 		mockQueueProcess(worldProcessor, playerStore, actionQueue, playerName)
 
 		if !almostEqual(character.GetPosition().X, expectedX) {
@@ -76,7 +76,7 @@ func TestBasicActions(t *testing.T) {
 
 	t.Run("player goes DOWN", func(t *testing.T) {
 		expectedX := 2.0
-		expectedY := 1.0
+		expectedY := 52.0
 		worldProcessor := NewProcessor()
 		character := worldProcessor.CreateCharacter()
 		playerName := "John"
@@ -97,7 +97,7 @@ func TestBasicActions(t *testing.T) {
 	})
 
 	t.Run("player goes RIGHT", func(t *testing.T) {
-		expectedX := 3.0
+		expectedX := 52.0
 		expectedY := 2.0
 		worldProcessor := NewProcessor()
 		character := worldProcessor.CreateCharacter()
