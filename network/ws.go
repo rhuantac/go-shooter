@@ -33,7 +33,7 @@ func (gs GameServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Printf("failed to read JSON %v: %v", r.RemoteAddr, err)
 			return
 		}
-		log.Printf("received: %v %b", sAction.Type, sAction.Action)
+		log.Printf("received: %v", sAction.Type)
 
 		switch sAction.Type {
 		case Init:
@@ -41,7 +41,7 @@ func (gs GameServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			json.Unmarshal(sAction.Action, &action)
 			gs.SocketManager.InitPlayer(action, c)
 			gs.GameManager.InitPlayer(action.Id, action.Name)
-		case Movement:
+		case Movement, Rotate:
 			var action server.Action
 			json.Unmarshal(sAction.Action, &action)
 			gs.GameManager.PerformAction(action)

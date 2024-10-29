@@ -17,12 +17,14 @@ const (
 	StopMoveRight InputType = "STOP_RIGHT"
 	MoveDown      InputType = "DOWN"
 	StopMoveDown  InputType = "STOP_DOWN"
+	Rotate        InputType = "ROTATE"
 )
 
-const moveSpeed = 50.0
+const moveSpeed = 20.0
 
 type Action struct {
 	Input  InputType
+	Angle  float64 `json:",omitempty"`
 	Player string
 }
 type Processor interface {
@@ -40,7 +42,12 @@ func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, actions [
 		if player == nil {
 			return fmt.Errorf("player %s not found", action.Player)
 		}
-		movePlayer(action.Input, player)
+		switch action.Input {
+		case Rotate:
+			player.SetTransform(player.GetPosition(), action.Angle)
+		case MoveLeft, MoveRight, MoveUp, MoveDown, StopMoveLeft, StopMoveRight, StopMoveUp, StopMoveDown:
+			movePlayer(action.Input, player)
+		}
 	}
 
 	tickRate := 60 //World iterations per second
@@ -53,14 +60,14 @@ func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, actions [
 
 func (e *WorldProcessor) CreateCharacter() *box2d.B2Body {
 	bd := box2d.MakeB2BodyDef()
-	bd.Position.Set(2.0, 2.0)
+	bd.Position.Set(10.0, 10.0)
 	bd.Type = box2d.B2BodyType.B2_dynamicBody
 	bd.FixedRotation = false
 	bd.AllowSleep = false
 
 	character := e.World.CreateBody(&bd)
 	shape := box2d.MakeB2CircleShape()
-	shape.SetRadius(20)
+	shape.SetRadius(5)
 	fd := box2d.MakeB2FixtureDef()
 	fd.Shape = &shape
 	fd.Density = 1.0

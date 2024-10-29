@@ -30,6 +30,7 @@ type State struct {
 	Id         string
 	Name       string
 	Color      PlayerColor
+	Rotation   float64
 }
 
 type PlayerStore map[string]*box2d.B2Body
@@ -102,7 +103,7 @@ func queueProcess(worldProcessor Processor, playerStore map[string]*box2d.B2Body
 			snapshot := Snapshot{Objects: []State{}}
 			for id, p := range playerStore {
 				userData := p.GetUserData().(UserData)
-				snapshot.Objects = append(snapshot.Objects, State{Id: id, Name: userData.Name, PosX: p.GetPosition().X, PosY: p.GetPosition().Y, Color: userData.Color})
+				snapshot.Objects = append(snapshot.Objects, State{Id: id, Name: userData.Name, PosX: p.GetPosition().X, PosY: p.GetPosition().Y, Color: userData.Color, Rotation: p.GetAngle()})
 			}
 			snapshotQueue.Push(snapshot)
 			accumulator -= dt
