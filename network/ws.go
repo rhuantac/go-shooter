@@ -41,7 +41,7 @@ func (gs GameServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			json.Unmarshal(sAction.Action, &action)
 			gs.SocketManager.InitPlayer(action, c)
 			gs.GameManager.InitPlayer(action.Id, action.Name)
-		case Movement, Rotate:
+		case Movement, Rotate, Shoot:
 			var action server.Action
 			json.Unmarshal(sAction.Action, &action)
 			gs.GameManager.PerformAction(action)

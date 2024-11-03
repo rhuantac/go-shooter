@@ -15,6 +15,7 @@ const (
 	Init     ActionType = 1
 	Movement ActionType = 2
 	Rotate   ActionType = 3
+	Shoot    ActionType = 4
 )
 
 type PlayerConn struct {

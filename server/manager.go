@@ -22,6 +22,7 @@ type UserData struct {
 	Color PlayerColor
 }
 type Snapshot struct {
+	Players []State
 	Objects []State
 }
 
@@ -39,11 +40,12 @@ type GameManager struct {
 	actionQueue   *Queue[Action]
 	snapshotQueue *Queue[Snapshot]
 	playerStore   PlayerStore
+	objectStore   map[string]*box2d.B2Body
 }
 
 func (gm *GameManager) Start() chan struct{} {
 	quitChan := make(chan struct{})
-	go gameLoop(gm.gameProcessor, gm.playerStore, gm.actionQueue, gm.snapshotQueue, quitChan)
+	go gameLoop(gm, quitChan)
 	return quitChan
 }
 
@@ -64,26 +66,27 @@ func (gm *GameManager) GetSnapshots() []Snapshot {
 }
 
 func CreateNewGame(processor Processor) GameManager {
-	store := make(PlayerStore, 0)
+	playerStore := make(PlayerStore, 0)
+	objectStore := make(map[string]*box2d.B2Body, 0)
 	gameActionQueue := NewQueue[Action]()
 	snapshotQueue := NewQueue[Snapshot]()
-	return GameManager{gameProcessor: processor, playerStore: store, actionQueue: gameActionQueue, snapshotQueue: snapshotQueue}
+	return GameManager{gameProcessor: processor, playerStore: playerStore, objectStore: objectStore, actionQueue: gameActionQueue, snapshotQueue: snapshotQueue}
 }
 
-func gameLoop(processor Processor, players PlayerStore, actionQueue *Queue[Action], snapshotQueue *Queue[Snapshot], quit chan struct{}) {
+func gameLoop(gameManager *GameManager, quit chan struct{}) {
 	for {
 		select {
 		case <-quit:
 			return
 		default:
-			queueProcess(processor, players, actionQueue, snapshotQueue)
+			queueProcess(gameManager)
 		}
 
 	}
 }
 
-func queueProcess(worldProcessor Processor, playerStore map[string]*box2d.B2Body, actionQueue *Queue[Action], snapshotQueue *Queue[Snapshot]) {
-	dt := int64(16) // 1/60 in ms
+func queueProcess(gameManager *GameManager) {
+	dt := int64(33) // 1/60 in ms
 	currentTime := time.Now().UnixMilli()
 	accumulator := int64(0)
 	for {
@@ -95,17 +98,20 @@ func queueProcess(worldProcessor Processor, playerStore map[string]*box2d.B2Body
 		accumulator += iterationTime
 
 		for accumulator >= dt {
-			actions := actionQueue.PopAll()
-			err := worldProcessor.Process(playerStore, actions)
+			actions := gameManager.actionQueue.PopAll()
+			err := gameManager.gameProcessor.Process(gameManager.playerStore, gameManager.objectStore, actions)
 			if err != nil {
 				panic(err)
 			}
-			snapshot := Snapshot{Objects: []State{}}
-			for id, p := range playerStore {
+			snapshot := Snapshot{Objects: []State{}, Players: []State{}}
+			for id, p := range gameManager.playerStore {
 				userData := p.GetUserData().(UserData)
-				snapshot.Objects = append(snapshot.Objects, State{Id: id, Name: userData.Name, PosX: p.GetPosition().X, PosY: p.GetPosition().Y, Color: userData.Color, Rotation: p.GetAngle()})
+				snapshot.Players = append(snapshot.Objects, State{Id: id, Name: userData.Name, PosX: p.GetPosition().X, PosY: p.GetPosition().Y, Color: userData.Color, Rotation: p.GetAngle()})
 			}
-			snapshotQueue.Push(snapshot)
+			for id, o := range gameManager.objectStore {
+				snapshot.Objects = append(snapshot.Objects, State{Id: id, PosX: o.GetPosition().X, PosY: o.GetPosition().Y, Rotation: o.GetAngle(), Color: "FFFFFF"})
+			}
+			gameManager.snapshotQueue.Push(snapshot)
 			accumulator -= dt
 		}
 

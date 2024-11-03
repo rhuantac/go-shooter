@@ -2,6 +2,8 @@ package server
 
 import (
 	"fmt"
+	"math"
+	"math/rand"
 
 	"github.com/ByteArena/box2d"
 )
@@ -18,9 +20,10 @@ const (
 	MoveDown      InputType = "DOWN"
 	StopMoveDown  InputType = "STOP_DOWN"
 	Rotate        InputType = "ROTATE"
+	Shoot         InputType = "SHOOT"
 )
 
-const moveSpeed = 20.0
+const moveSpeed = 10.0
 
 type Action struct {
 	Input  InputType
@@ -28,14 +31,14 @@ type Action struct {
 	Player string
 }
 type Processor interface {
-	Process(playerStore map[string]*box2d.B2Body, actions []Action) error
+	Process(playerStore map[string]*box2d.B2Body, objectStore map[string]*box2d.B2Body, actions []Action) error
 	CreateCharacter() *box2d.B2Body
 }
 type WorldProcessor struct {
 	World *box2d.B2World
 }
 
-func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, actions []Action) error {
+func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, objectStore map[string]*box2d.B2Body, actions []Action) error {
 	for _, action := range actions {
 		fmt.Printf("action %v", action)
 		player := playerStore[action.Player]
@@ -47,10 +50,13 @@ func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, actions [
 			player.SetTransform(player.GetPosition(), action.Angle)
 		case MoveLeft, MoveRight, MoveUp, MoveDown, StopMoveLeft, StopMoveRight, StopMoveUp, StopMoveDown:
 			movePlayer(action.Input, player)
+		case Shoot:
+			bullet := shoot(player)
+			objectStore[fmt.Sprintf("bullet-%d", rand.Intn(10000))] = bullet
 		}
 	}
 
-	tickRate := 60 //World iterations per second
+	tickRate := 30 //World iterations per second
 	tickDuration := 1.0 / float64(tickRate)
 
 	e.World.Step(tickDuration, 6, 2)
@@ -58,11 +64,35 @@ func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, actions [
 	return nil
 }
 
+func shoot(player *box2d.B2Body) *box2d.B2Body {
+	const armLength float64 = 6.0
+	const shotSpeed = 20
+	bd := box2d.MakeB2BodyDef()
+	spawnY, spawnX := math.Sincos(player.GetAngle())
+	bd.Position.Set(player.GetPosition().X+spawnX*armLength, player.GetPosition().Y+spawnY*armLength)
+	bd.Type = box2d.B2BodyType.B2_dynamicBody
+	
+
+	bullet := player.GetWorld().CreateBody(&bd)
+	shape := box2d.MakeB2CircleShape()
+	shape.SetRadius(1)
+	fd := box2d.MakeB2FixtureDef()
+	fd.Shape = &shape
+	fd.Density = 1.0
+	bullet.CreateFixtureFromDef(&fd)
+	velocityX := shotSpeed * spawnX
+
+	velocityY := shotSpeed * spawnY
+	
+	bullet.SetLinearVelocity(box2d.B2Vec2{X: float64(velocityX), Y: float64(velocityY)})
+	return bullet
+}
+
 func (e *WorldProcessor) CreateCharacter() *box2d.B2Body {
 	bd := box2d.MakeB2BodyDef()
-	bd.Position.Set(10.0, 10.0)
+	bd.Position.Set(20.0, 20.0)
 	bd.Type = box2d.B2BodyType.B2_dynamicBody
-	bd.FixedRotation = false
+	bd.FixedRotation = true
 	bd.AllowSleep = false
 
 	character := e.World.CreateBody(&bd)
