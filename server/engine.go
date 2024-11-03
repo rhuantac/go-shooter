@@ -66,11 +66,14 @@ func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, objectSto
 
 func shoot(player *box2d.B2Body) *box2d.B2Body {
 	const armLength float64 = 6.0
-	const shotSpeed = 20
+	const shotSpeed = 50
 	bd := box2d.MakeB2BodyDef()
 	spawnY, spawnX := math.Sincos(player.GetAngle())
 	bd.Position.Set(player.GetPosition().X+spawnX*armLength, player.GetPosition().Y+spawnY*armLength)
 	bd.Type = box2d.B2BodyType.B2_dynamicBody
+	bd.FixedRotation = true
+	bd.AllowSleep = false
+	bd.Bullet = true
 	
 
 	bullet := player.GetWorld().CreateBody(&bd)
