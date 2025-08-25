@@ -26,6 +26,7 @@ type UserData struct {
 type Snapshot struct {
 	Players []State
 	Objects []State
+	Events  []ServerEvent
 }
 
 type State struct {
@@ -43,6 +44,7 @@ type GameManager struct {
 	snapshotQueue *Queue[Snapshot]
 	playerStore   PlayerStore
 	objectStore   map[string]*box2d.B2Body
+	eventStore    []ServerEvent
 }
 
 func (gm *GameManager) Start() chan struct{} {
@@ -71,9 +73,11 @@ func (gm *GameManager) GetSnapshots() []Snapshot {
 func CreateNewGame(processor Processor) GameManager {
 	playerStore := make(PlayerStore, 0)
 	objectStore := make(map[string]*box2d.B2Body, 0)
+	eventStore := make([]ServerEvent, 0)
+
 	gameActionQueue := NewQueue[Action]()
 	snapshotQueue := NewQueue[Snapshot]()
-	return GameManager{gameProcessor: processor, playerStore: playerStore, objectStore: objectStore, actionQueue: gameActionQueue, snapshotQueue: snapshotQueue}
+	return GameManager{gameProcessor: processor, playerStore: playerStore, objectStore: objectStore, actionQueue: gameActionQueue, snapshotQueue: snapshotQueue, eventStore: eventStore}
 }
 
 func gameLoop(gameManager *GameManager, quit chan struct{}) {
@@ -102,7 +106,7 @@ func queueProcess(gameManager *GameManager) {
 
 		for accumulator >= dt {
 			actions := gameManager.actionQueue.PopAll()
-			err := gameManager.gameProcessor.Process(gameManager.playerStore, gameManager.objectStore, actions)
+			events, err := gameManager.gameProcessor.Process(gameManager.playerStore, gameManager.objectStore, actions)
 			if err != nil {
 				panic(err)
 			}
@@ -114,8 +118,22 @@ func queueProcess(gameManager *GameManager) {
 			for id, o := range gameManager.objectStore {
 				snapshot.Objects = append(snapshot.Objects, State{Id: id, PosX: o.GetPosition().X, PosY: o.GetPosition().Y, Rotation: o.GetAngle(), Color: "FFFFFF"})
 			}
+			snapshot.Events = gameManager.eventStore
+			gameManager.eventStore = []ServerEvent{}
 			gameManager.snapshotQueue.Push(snapshot)
 			accumulator -= dt
+			for _, ev := range events {
+				fmt.Printf("Server Action: %v\n", ev)
+				switch ev.Type {
+				case "HIT":
+					// Handle hit action
+					hitData := ev.Body.(map[string]string)
+					action := Action{Player: "server", Input: Destroy, FromServer: true, Target: hitData["bulletId"]}
+					gameManager.actionQueue.Push(action)
+					gameManager.eventStore = append(gameManager.eventStore, ev)
+					fmt.Printf("Bullet %s hit target %s\n", hitData["bullet_id"], hitData["target"])
+				}
+			}
 		}
 
 	}

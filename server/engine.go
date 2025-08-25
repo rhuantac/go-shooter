@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"math/rand"
 
@@ -21,14 +22,23 @@ const (
 	StopMoveDown  InputType = "STOP_DOWN"
 	Rotate        InputType = "ROTATE"
 	Shoot         InputType = "SHOOT"
+	Hit           InputType = "HIT"
+	Destroy       InputType = "DESTROY"
 )
-
 const moveSpeed = 10.0
 
 type Action struct {
-	Input  InputType
-	Angle  float64 `json:",omitempty"`
-	Player string
+	Input      InputType
+	Angle      float64 `json:",omitempty"`
+	Player     string
+	FromServer bool   `json:"fromServer,omitempty"`
+	Target     string `json:"target,omitempty"`
+}
+
+type ServerEvent struct {
+	Type   string      `json:"type"`
+	Body   interface{} `json:"body"`
+	Player string      `json:"player,omitempty"`
 }
 
 type BodyData struct {
@@ -38,19 +48,20 @@ type BodyData struct {
 }
 
 type Processor interface {
-	Process(playerStore map[string]*box2d.B2Body, objectStore map[string]*box2d.B2Body, actions []Action) error
+	Process(playerStore map[string]*box2d.B2Body, objectStore map[string]*box2d.B2Body, actions []Action) ([]ServerEvent, error)
 	CreateCharacter() *box2d.B2Body
 }
 type WorldProcessor struct {
 	World *box2d.B2World
 }
 
-func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, objectStore map[string]*box2d.B2Body, actions []Action) error {
+func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, objectStore map[string]*box2d.B2Body, actions []Action) ([]ServerEvent, error) {
+	serverActions := []ServerEvent{}
 	for _, action := range actions {
 		fmt.Printf("action %v", action)
 		player := playerStore[action.Player]
-		if player == nil {
-			return fmt.Errorf("player %s not found", action.Player)
+		if player == nil && !action.FromServer {
+			return nil, fmt.Errorf("player %s not found", action.Player)
 		}
 		switch action.Input {
 		case Rotate:
@@ -63,6 +74,13 @@ func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, objectSto
 			bulletData := BodyData{ID: bulletID, Type: "bullet", UserData: map[string]interface{}{"owner": action.Player}}
 			bullet.SetUserData(bulletData)
 			objectStore[bulletID] = bullet
+		case Destroy:
+			target := objectStore[action.Target]
+			if target != nil {
+				log.Printf("Destroying object %s", action.Target)
+				e.World.DestroyBody(objectStore[action.Target])
+				delete(objectStore, action.Target)
+			}
 		}
 	}
 
@@ -82,24 +100,21 @@ func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, objectSto
 			if dataA.Type == "bullet" || dataB.Type == "bullet" {
 				// Remove bullet from world and objectStore
 				if dataA.Type == "bullet" {
-					//Check if body exists before destroying
-					e.World.DestroyBody(bodyA)
-					delete(objectStore, dataA.ID)
+					serverActions = append(serverActions, ServerEvent{Type: "HIT", Body: map[string]string{"bulletId": dataA.ID, "target": dataB.ID, "posX": fmt.Sprintf("%f", bodyA.GetPosition().X), "posY": fmt.Sprintf("%f", bodyA.GetPosition().Y)}})
 				}
 				if dataB.Type == "bullet" {
-					e.World.DestroyBody(bodyB)
-					delete(objectStore, dataB.ID)
+					serverActions = append(serverActions, ServerEvent{Type: "HIT", Body: map[string]string{"bulletId": dataB.ID, "target": dataA.ID, "posX": fmt.Sprintf("%f", bodyB.GetPosition().X), "posY": fmt.Sprintf("%f", bodyB.GetPosition().Y)}})
 				}
 			}
 		}
 		contactEvents = contactEvents.GetNext()
 	}
-	return nil
+	return serverActions, nil
 }
 
 func shoot(player *box2d.B2Body) *box2d.B2Body {
 	const armLength float64 = 9.0
-	const shotSpeed = 50
+	const shotSpeed = 20
 	bd := box2d.MakeB2BodyDef()
 	spawnY, spawnX := math.Sincos(player.GetAngle())
 	bd.Position.Set(player.GetPosition().X+spawnX*armLength, player.GetPosition().Y+spawnY*armLength)
@@ -125,10 +140,10 @@ func shoot(player *box2d.B2Body) *box2d.B2Body {
 
 func (e *WorldProcessor) CreateCharacter() *box2d.B2Body {
 	bd := box2d.MakeB2BodyDef()
-	bd.Position.Set(20.0, 20.0)
+	bd.Position.Set(rand.Float64()*50, rand.Float64()*50)
 	bd.Type = box2d.B2BodyType.B2_dynamicBody
 	bd.FixedRotation = true
-	bd.AllowSleep = false
+	bd.AllowSleep = true
 
 	character := e.World.CreateBody(&bd)
 	shape := box2d.MakeB2CircleShape()
