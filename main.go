@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"log"
 	"net"
 	"net/http"
@@ -27,11 +26,12 @@ func main() {
 // runWs starts a http.Server for the passed in address
 // with all requests handled by echoServer.
 func runWs(writePump chan server.Snapshot, gameManager *server.GameManager) error {
-	if len(os.Args) < 2 {
-		return errors.New("please provide an address to listen on as the first argument")
-	}
 
-	l, err := net.Listen("tcp", os.Args[1])
+	addr := "localhost:5000"
+	if len(os.Args) >= 2 {
+		addr = os.Args[1]
+	}
+	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
 	}

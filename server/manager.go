@@ -1,6 +1,8 @@
 package server
 
 import (
+	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/ByteArena/box2d"
@@ -53,7 +55,8 @@ func (gm *GameManager) InitPlayer(id string, name string) {
 	color := PlayerColors[len(gm.playerStore)%len(PlayerColors)]
 	p := gm.gameProcessor.CreateCharacter()
 	data := UserData{Name: name, Color: color}
-	p.SetUserData(data)
+	characterData := BodyData{ID: fmt.Sprintf("player-%d", rand.Int()), Type: "player", UserData: data}
+	p.SetUserData(characterData)
 	gm.playerStore[id] = p
 }
 
@@ -105,8 +108,8 @@ func queueProcess(gameManager *GameManager) {
 			}
 			snapshot := Snapshot{Objects: []State{}, Players: []State{}}
 			for id, p := range gameManager.playerStore {
-				userData := p.GetUserData().(UserData)
-				snapshot.Players = append(snapshot.Objects, State{Id: id, Name: userData.Name, PosX: p.GetPosition().X, PosY: p.GetPosition().Y, Color: userData.Color, Rotation: p.GetAngle()})
+				userData := p.GetUserData().(BodyData).UserData.(UserData)
+				snapshot.Players = append(snapshot.Players, State{Id: id, Name: userData.Name, PosX: p.GetPosition().X, PosY: p.GetPosition().Y, Color: userData.Color, Rotation: p.GetAngle()})
 			}
 			for id, o := range gameManager.objectStore {
 				snapshot.Objects = append(snapshot.Objects, State{Id: id, PosX: o.GetPosition().X, PosY: o.GetPosition().Y, Rotation: o.GetAngle(), Color: "FFFFFF"})

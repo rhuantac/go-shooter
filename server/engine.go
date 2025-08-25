@@ -30,6 +30,13 @@ type Action struct {
 	Angle  float64 `json:",omitempty"`
 	Player string
 }
+
+type BodyData struct {
+	ID       string
+	Type     string
+	UserData interface{}
+}
+
 type Processor interface {
 	Process(playerStore map[string]*box2d.B2Body, objectStore map[string]*box2d.B2Body, actions []Action) error
 	CreateCharacter() *box2d.B2Body
@@ -52,7 +59,10 @@ func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, objectSto
 			movePlayer(action.Input, player)
 		case Shoot:
 			bullet := shoot(player)
-			objectStore[fmt.Sprintf("bullet-%d", rand.Intn(10000))] = bullet
+			bulletID := fmt.Sprintf("bullet-%d", rand.Int())
+			bulletData := BodyData{ID: bulletID, Type: "bullet", UserData: map[string]interface{}{"owner": action.Player}}
+			bullet.SetUserData(bulletData)
+			objectStore[bulletID] = bullet
 		}
 	}
 
@@ -60,12 +70,35 @@ func (e *WorldProcessor) Process(playerStore map[string]*box2d.B2Body, objectSto
 	tickDuration := 1.0 / float64(tickRate)
 
 	e.World.Step(tickDuration, 6, 2)
-
+	contactEvents := e.World.GetContactList()
+	for contactEvents != nil {
+		bodyA := contactEvents.GetFixtureA().GetBody()
+		bodyB := contactEvents.GetFixtureB().GetBody()
+		userDataA := bodyA.GetUserData()
+		userDataB := bodyB.GetUserData()
+		if userDataA != nil && userDataB != nil {
+			dataA := userDataA.(BodyData)
+			dataB := userDataB.(BodyData)
+			if dataA.Type == "bullet" || dataB.Type == "bullet" {
+				// Remove bullet from world and objectStore
+				if dataA.Type == "bullet" {
+					//Check if body exists before destroying
+					e.World.DestroyBody(bodyA)
+					delete(objectStore, dataA.ID)
+				}
+				if dataB.Type == "bullet" {
+					e.World.DestroyBody(bodyB)
+					delete(objectStore, dataB.ID)
+				}
+			}
+		}
+		contactEvents = contactEvents.GetNext()
+	}
 	return nil
 }
 
 func shoot(player *box2d.B2Body) *box2d.B2Body {
-	const armLength float64 = 6.0
+	const armLength float64 = 9.0
 	const shotSpeed = 50
 	bd := box2d.MakeB2BodyDef()
 	spawnY, spawnX := math.Sincos(player.GetAngle())
@@ -74,7 +107,6 @@ func shoot(player *box2d.B2Body) *box2d.B2Body {
 	bd.FixedRotation = true
 	bd.AllowSleep = false
 	bd.Bullet = true
-	
 
 	bullet := player.GetWorld().CreateBody(&bd)
 	shape := box2d.MakeB2CircleShape()
@@ -86,7 +118,7 @@ func shoot(player *box2d.B2Body) *box2d.B2Body {
 	velocityX := shotSpeed * spawnX
 
 	velocityY := shotSpeed * spawnY
-	
+
 	bullet.SetLinearVelocity(box2d.B2Vec2{X: float64(velocityX), Y: float64(velocityY)})
 	return bullet
 }
